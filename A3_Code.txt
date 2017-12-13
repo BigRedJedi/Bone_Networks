@@ -1,0 +1,57 @@
+#Articulations
+
+#Shows data cleaning process, bones articulated with no matching articulation bone ID
+ANodes2 <- read_excel("C:/Users/kyleh/Google Drive UNO/UNO/Fall 2017/ISQA 8086/Assignment 3/ANodes2.xlsx")
+ALinks <- read_excel("C:/Users/kyleh/Google Drive UNO/UNO/Fall 2017/ISQA 8086/Assignment 3/ALinks.xlsx")
+ANet <- graph_from_data_frame(d=ALinks, vertices=ANodes2, directed=T)
+ANet <- simplify(ANet,	remove.multiple = F,	remove.loops = T)
+ANodes2$size <- 50
+ANodes2$color.background <- c("red","orange","lightgreen","darkgreen","darkblue","purple","pink")[ANodes2$category.number]
+ANodes2$color.border <- c("black")
+
+plot(ANet,edge.arrow.size=.4,vertex.size=7,vertex.label=NA, edge.curved=.1,vertex.color="LightBlue",edge.color="DarkGray",edge.width=1)
+
+# Circular version of bone articulation chains
+plot(ANet,layout=layout_in_circle(ANet),vertex.label=NA,edge.arrow.size=.01,vertex.color="LightBlue",edge.color="DarkGray",edge.width=1)
+
+# Interactive bone articulation network that can be moved to easily see the chains
+visNetwork(ANodes2,	ALinks,	main="Bone Articulations")
+
+# Completed articulation network by category
+legdtxt <- c("Lower Extremity", "Upper Extremity", "Vertebral Column", "Pectoral Girdle", "Cranial", "Pelvic Girdle", "Thoracic Cage")
+legdcol = c("red","orange","lightgreen","darkgreen","darkblue","purple","pink")
+visNetwork(ANodes2,	ALinks,	main="Bone Articulations by Category") %>% visLegend(useGroups = FALSE, addNodes = data.frame(shape=c("square"),label=legdtxt, color=legdcol))
+
+# Simple Force Network Graph Showing All Bones Articulated Within a Certain Category
+df <- data.frame(ANodes2$category , ANodes2$name)
+simpleNetwork(df,linkDistance = 100,charge=-5,nodeColour = "Navy",fontSize = 10,linkColour = "Gray")
+
+#Pair
+
+# Visual Network of the three most commonly paired bones excluding the ribs and pelvis bones due to complexity.  This highlights how most of the bones are unsided and how pairings can be between left and right, left and unsided, or right or unsided, while showing the relative amount of bones from each
+
+
+PLinksFemur <- read_excel("C:/Users/kyleh/Google Drive UNO/UNO/Fall 2017/ISQA 8086/Assignment 3/PLinksFemur.xlsx")
+PNodesFemur <- read_excel("C:/Users/kyleh/Google Drive UNO/UNO/Fall 2017/ISQA 8086/Assignment 3/PNodesFemur.xlsx")
+PNodesFemur$color.border <- c("black","red","purple")[PNodesFemur$bone.num]
+PNetFemur <-graph_from_data_frame(d=PLinksFemur, vertices=PNodesFemur, directed=T)
+PNetFemur <- simplify(PNetFemur,remove.multiple = F,remove.loops = T)
+PNodesFemur$color.background <- c("lightgreen","lightblue","gold")[PNodesFemur$side.num]
+PNodesFemur$color.border <- c("black","darkred","purple")[PNodesFemur$bone.num]
+PLegdtxt <- c("Femur","Tibia","Humerus","Left","Right","Unsided")
+PNodesFemur$color.highlight.border <- "orange"
+PLegdcol <- c("Black","DarkRed","Purple","lightgreen","lightblue","gold")
+PNodesFemur$borderWidth <- 5
+visNetwork(PNodesFemur,PLinksFemur, main="Most Common Paired Bones") %>% visLegend(useGroups = FALSE, addNodes = data.frame(shape=c("square"),label=PLegdtxt, color=PLegdcol))
+
+# Upgrades to the previous graphs to allow the user to select by bone and by side
+
+visNetwork(PNodesFemur,PLinksFemur, main="Most Common Paired Bones") %>% visLegend(useGroups = FALSE, addNodes = data.frame(shape=c("square"),label=PLegdtxt, color=PLegdcol)) %>% visOptions(highlightNearest=TRUE,selectedBy="name")
+
+# By side
+visNetwork(PNodesFemur,PLinksFemur, main="Most Common Paired Bones") %>% visLegend(useGroups = FALSE, addNodes = data.frame(shape=c("square"),label=PLegdtxt, color=PLegdcol)) %>% visOptions(highlightNearest=TRUE,selectedBy="side")
+
+# Force Network using D3 of The Same 3 Bones Showing Size and Using Opacity and Bone Names Appearing on Hover
+el <- data.frame(from=as.numeric(factor(PLinksFemur$from))-1,to=as.numeric(factor(PLinksFemur$to))-1 )
+nl <- cbind(idn=factor(PNodesFemur$name,levels=PNodesFemur$name.full),PNodesFemur)
+forceNetwork(Links = el,Nodes = nl,Source="from",Target="to",NodeID = "name.full",Group = "name",linkWidth = 1,linkColour = "#afafaf",fontSize = 18,legend=T,width=600,height=400,opacity=.8,Nodesize = 13)

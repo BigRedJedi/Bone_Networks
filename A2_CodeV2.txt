@@ -1,0 +1,17 @@
+#Shows data cleaning process, bones articulated with no matching articulation bone ID
+plot(ANet,	edge.arrow.size=.4,vertex.label=NA,vertex.size=5,vertex.color="LightBlue",edge.color="DarkGray",edge.width=1)
+
+#Shows the chain of bone articulations
+plot(ANet,edge.arrow.size=.4,vertex.size=7,vertex.label=NA, edge.curved=.1,vertex.color="LightBlue",edge.color="DarkGray",edge.width=1)
+
+# Circular version of bone articulation chains
+plot(ANet,layout=layout_in_circle(ANet),vertex.label=NA,edge.arrow.size=.01,vertex.color="LightBlue",edge.color="DarkGray",edge.width=1)
+
+# Interactive bone articulation network that can be moved to easily see the chains
+visNetwork(ANodes2,	ALinks,	main="Bone Articulations")
+
+# Completed articulation network by category
+visNetwork(ANodes2,	ALinks,	main="Bone Articulations by Category") %>% visLegend(useGroups = FALSE, addNodes = data.frame(shape=c("square"),label=legdtxt, color=legdcol))
+
+# Simple Force Network Graph Showing All Bones Articulated Within a Certain Category
+simpleNetwork(df,linkDistance = 100,charge=-5,nodeColour = "Navy",fontSize = 10,linkColour = "Gray")

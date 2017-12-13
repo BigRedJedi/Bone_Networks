@@ -1,0 +1,127 @@
+---
+title: "Assignment3_KyleHampton"
+author: "Kyle Hampton"
+date: "October 28, 2017"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(knitr)
+opts_chunk$set(tidy.opts = list(width.cutoff = 30),
+tidy = TRUE)
+library(readr)
+library(readxl)
+library(igraph)
+library(network)
+library(animation)
+library(visNetwork)
+library(threejs)
+library(htmlwidgets)
+library(networkD3)
+```
+
+## Assignment 3 Background
+
+In this assignment, the task is to leverage various data visualization packages in R to create interactive Network and Graph visualizations.  The visualizations are built of the specific Bone Articulation and Pair data sets.  The subsequent assignment is broken into two sections, articulation and pair, with specific visualizations for each area.
+
+## Articulation Plots
+
+## Initial Network Diagram
+
+This first plot is minimally interactive, although this network diagram does highlight the data cleaning process.  With the cleaning and organizing out of the way, our subsequent visualization will comes together much easier. This diagram emphasizes the chain-like articulation of bones through the human body.  It's important to note that although bones are connected to each other, they may not be considered an articulation.
+
+```{r}
+ANodes2 <- read_excel("C:/Users/kyleh/Google Drive UNO/UNO/Fall 2017/ISQA 8086/Assignment 3/ANodes2.xlsx")
+ALinks <- read_excel("C:/Users/kyleh/Google Drive UNO/UNO/Fall 2017/ISQA 8086/Assignment 3/ALinks.xlsx")
+ANet <- graph_from_data_frame(d=ALinks, vertices=ANodes2, directed=T)
+ANet <- simplify(ANet,	remove.multiple = F,	remove.loops = T)
+ANodes2$size <- 50
+ANodes2$color.background <- c("red","orange","lightgreen","darkgreen","darkblue","purple","pink")[ANodes2$category.number]
+ANodes2$color.border <- c("black")
+plot(ANet,edge.arrow.size=.4,vertex.size=7,vertex.label=NA, edge.curved=.1,vertex.color="LightBlue",edge.color="DarkGray",edge.width=1)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+## Cicular Network Diagram
+
+This next plot uses the same as the previous network diagram, although this diagram visualizes the data in a circle.  This data emphasizes the articulation connections between bones, highlighting how some bones have few or no articulations while others have quite a few.
+
+```{r}
+plot(ANet,layout=layout_in_circle(ANet),vertex.label=NA,edge.arrow.size=.01,vertex.color="LightBlue",edge.color="DarkGray",edge.width=1)
+```
+
+## Interactive Vis Network
+
+The following visualization is interactive and utilizes the Vis Network library. This visualiztion builds upon the first visualization with the added component of interaction. This visualization displays bone articulations by the category of bone (i.e., area of the body).  This visualization includes a legend to help aid the viewer in understanding what bones belong to which categories and how they are connected.
+
+```{r}
+legdtxt <- c("Lower Extremity", "Upper Extremity", "Vertebral Column", "Pectoral Girdle", "Cranial", "Pelvic Girdle", "Thoracic Cage")
+legdcol = c("red","orange","lightgreen","darkgreen","darkblue","purple","pink")
+visNetwork(ANodes2,	ALinks,	main="Bone Articulations by Category") %>% visLegend(useGroups = FALSE, addNodes = data.frame(shape=c("square"),label=legdtxt, color=legdcol))
+```
+
+## Interactive Simple Network
+
+This last visualization for articulation leverages the simple network library.  This visualization shows each, specific bone that is articulated within a specific category.
+
+```{r}
+df <- data.frame(ANodes2$category , ANodes2$name)
+simpleNetwork(df,linkDistance = 100,charge=-5,nodeColour = "Navy",fontSize = 10,linkColour = "Gray")
+```
+
+
+
+
+
+## Pair Plots
+
+## Interactive Vis Network
+
+This first pair visualization leverages the Vis Network library to display a visualization of commonly paired bones.  Not including the ribs and pelvis bones, this visualization includes the three most common paired bones from the data set, the femur, tibia, and humerus.  The subsequent graph designates each bone by the side of the body (e.g., left, right, or unsided). The graph also shows the potenial pairings between the three designations while highlighting the volume of each type of bone by the size of the circle.
+
+```{r}
+PLinksFemur <- read_excel("C:/Users/kyleh/Google Drive UNO/UNO/Fall 2017/ISQA 8086/Assignment 3/PLinksFemur.xlsx")
+PNodesFemur <- read_excel("C:/Users/kyleh/Google Drive UNO/UNO/Fall 2017/ISQA 8086/Assignment 3/PNodesFemur.xlsx")
+PNodesFemur$color.border <- c("black","red","purple")[PNodesFemur$bone.num]
+PNetFemur <-graph_from_data_frame(d=PLinksFemur, vertices=PNodesFemur, directed=T)
+PNetFemur <- simplify(PNetFemur,remove.multiple = F,remove.loops = T)
+PNodesFemur$color.background <- c("lightgreen","lightblue","gold")[PNodesFemur$side.num]
+PNodesFemur$color.border <- c("black","darkred","darkblue")[PNodesFemur$bone.num]
+PNodesFemur$size <- PNodesFemur$count/3
+PLegdtxt <- c("Femur","Tibia","Humerus","Left","Right","Unsided")
+PNodesFemur$color.highlight.border <- "orange"
+PLegdcol <- c("Black","DarkRed","DarkBlue","lightgreen","lightblue","gold")
+PNodesFemur$borderWidth <- 5
+
+visNetwork(PNodesFemur,PLinksFemur, main="Most Common Paired Bones") %>% visLegend(useGroups = FALSE, addNodes = data.frame(shape=c("square"),label=PLegdtxt, color=PLegdcol))
+```
+
+## Interactive Vis Network By Name
+
+This interactive visualization builds on the previous visualization with the addition of the Vis Option drop down menu to select bones by name.
+
+```{r}
+visNetwork(PNodesFemur,PLinksFemur, main="Most Common Paired Bones") %>% visLegend(useGroups = FALSE, addNodes = data.frame(shape=c("square"),label=PLegdtxt, color=PLegdcol)) %>% visOptions(highlightNearest=TRUE,selectedBy="name")
+```
+
+## Interactive Vis Network By Side
+
+Similar to the previous visualization, this visualization utilizes the Vis Option drop down menu except this time with options related to selecting bones by side.
+
+```{r}
+visNetwork(PNodesFemur,PLinksFemur, main="Most Common Paired Bones") %>% visLegend(useGroups = FALSE, addNodes = data.frame(shape=c("square"),label=PLegdtxt, color=PLegdcol)) %>% visOptions(highlightNearest=TRUE,selectedBy="side")
+```
+
+## Force Network
+
+This last visualization leverages the interactive force network library.  With the help of D3, this visualization also highlights the number of each bone type in the data set while uniquely showing the connections with added opacity and names appearing with hovering movements.
+
+```{r}
+el <- data.frame(from=as.numeric(factor(PLinksFemur$from))-1,to=as.numeric(factor(PLinksFemur$to))-1 )
+nl <- cbind(idn=factor(PNodesFemur$name,levels=PNodesFemur$name.full),PNodesFemur)
+forceNetwork(Links = el,Nodes = nl,Source="from",Target="to",NodeID = "name.full",Group = "name",linkWidth = 1,linkColour = "#afafaf",fontSize = 18,legend=T,width=600,height=400,opacity=.8,Nodesize = 13)
+```
